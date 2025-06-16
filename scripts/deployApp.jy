@@ -1,0 +1,32 @@
+# deployApp.jy - Sample Jython script to deploy EAR/WAR on WAS 8.5
+
+# Connect to the WebSphere Admin Server
+adminURL = 'soap://localhost:8879'
+user = 'admin'
+password = 'admin_password'
+
+print('Connecting to Admin Server...')
+AdminConfig.connect(user, password, adminURL)
+
+appName = 'HelloWorldApp'
+appPath = '/path/to/app/HelloWorld.war'
+
+apps = AdminApp.list()
+if appName in apps:
+    print('Uninstalling existing app:', appName)
+    AdminApp.uninstall(appName)
+    AdminConfig.save()
+
+print('Installing new app:', appName)
+AdminApp.install(appPath, ['-appname', appName])
+AdminConfig.save()
+
+print('Synchronizing nodes...')
+AdminControl.invoke(AdminControl.completeObjectName('type=NodeSync,node=*'), 'sync')
+
+print('Starting application:', appName)
+appManager = AdminControl.queryNames('type=ApplicationManager,*')
+AdminControl.invoke(appManager, 'startApplication', appName)
+
+print('Deployment complete.')
+

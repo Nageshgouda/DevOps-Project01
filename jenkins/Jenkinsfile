@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/yourusername/was-deploy-app.git', branch: 'main'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building WAR/EAR...'
+                // Replace with your actual build command or skip if WAR ready
+                sh 'mvn clean package || echo "No build step or Maven not installed"'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying app to WebSphere...'
+                sh '''
+                wsadmin.sh -lang jython -f scripts/deployApp.jy -user admin -password admin_password
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment succeeded!'
+        }
+        failure {
+            echo 'Deployment failed!'
+        }
+    }
+}
+
